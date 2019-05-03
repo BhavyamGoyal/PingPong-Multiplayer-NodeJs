@@ -13,6 +13,7 @@ module.exports = class Lobby {
         var room = null;
 
         Object.values(this.roomsInLobbyDictionary).forEach(function (curRoom) {
+            console.log(curRoom.IsRoomFree());
             if (curRoom.IsRoomFree()) {
                 room = curRoom;
                 console.log("ROOOOM found");

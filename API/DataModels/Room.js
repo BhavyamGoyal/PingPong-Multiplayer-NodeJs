@@ -11,7 +11,8 @@ module.exports = class Room {
     }
 
     IsRoomFree(){
-        return Object.keys(this.playersInRoomDictionary).length<this.roomSizefes;
+        console.log("ROOOOM size"+Object.keys(this.playersInRoomDictionary).length);
+        return Object.keys(this.playersInRoomDictionary).length<this.roomSize;
     }
     AddPlayerInRoom(player) {
         if (Object.keys(this.playersInRoomDictionary).length < this.roomSize) {

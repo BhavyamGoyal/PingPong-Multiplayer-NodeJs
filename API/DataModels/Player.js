@@ -10,24 +10,27 @@ module.exports = class Player {
         this.room = null;
         this.playerID = shortID.generate();
     }
-    JoinRoom(room){
-        this.room=room;
+    JoinRoom(room) {
+        this.room = room;
         room.AddPlayerInRoom(this);
     }
-    JoinGame(){
-        var playerData={
-            playerID:this.playerID,
-            playerSpawn:this.room.GetPlayersInRoom()-1
+    JoinGame() {
+        var playerData = {
+            playerID: this.playerID,
+            playerSpawn: this.room.GetPlayersInRoom() - 1
         }
+        console.log(this.room.roomName);
         this.socket.emit(ServerEvents.ON_JOIN_GAME, playerData);
-        this.socket.to(this.room.roomName).emit(ServerEvents.ON_JOIN_GAME,playerData);
-        var players=this.room.GetPreviousPlayers();
-        for(var i=0;i<players.length;i++){
-            playerData={
-                playerID:players[i],
-                playerSpawn:i
+        this.socket.to(this.room.roomName).emit(ServerEvents.ON_JOIN_GAME, playerData);
+        var players = this.room.GetPreviousPlayers();
+        for (var i = 0; i < players.length; i++) {
+            if (this.playerID != players[i]) {
+                playerData = {
+                    playerID: players[i],
+                    playerSpawn: i
+                }
+                this.socket.emit(ServerEvents.ON_JOIN_GAME, playerData);
             }
-            this.socket.emit(ServerEvents.ON_JOIN_GAME,playerData);
         }
     }
 }
