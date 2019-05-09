@@ -10,9 +10,9 @@ var lobby = new Lobby("Lobby1", 1);
 io.attach(SocketSettings.socketPort);
 io.on('connection', function (socket) {
    console.log('A user connected');
-   var player=null;
    socket.emit(ServerEvents.ON_CONNECTED);
-
+   var player=null;
+   
    socket.on(ServerEvents.REGISTER_USER, function (data) {
       console.log('User Rregistering'+JSON.stringify(data));
       player=new Player(data.playerName,socket);
@@ -21,17 +21,21 @@ io.on('connection', function (socket) {
          playerID:player.playerID
       }
       socket.emit(ServerEvents.ON_USER_REGISTER,playerData);
-     
    });
 
    socket.on(ServerEvents.JOIN_ROOM, function () {
       console.log("player joining room");
       var room=lobby.GetTheRoom();
       player.JoinRoom(room);
-      player.JoinGame();
+      //player.JoinGame();
    });
 
    socket.on(ServerEvents.LEAVE_ROOM, function (data) {
+   });
+
+   socket.on(ServerEvents.SEND_INPUT, function (data) {
+      console.log("Input Recieved"+JSON.stringify(data));
+      player.MovePad(data);
    });
 
    socket.on("disconnect", function () {

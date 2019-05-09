@@ -12,17 +12,18 @@ module.exports = class Player {
     }
     JoinRoom(room) {
         this.room = room;
-        room.AddPlayerInRoom(this);
+        this.room.AddPlayerInRoom(this);
+        this.JoinGame();
     }
     JoinGame() {
         var playerData = {
             playerID: this.playerID,
             playerSpawn: this.room.GetPlayersInRoom() - 1
         }
-        console.log(this.room.roomName);
         this.socket.emit(ServerEvents.ON_JOIN_GAME, playerData);
         this.socket.to(this.room.roomName).emit(ServerEvents.ON_JOIN_GAME, playerData);
         var players = this.room.GetPreviousPlayers();
+        console.log("player" + this.room.roomName);
         for (var i = 0; i < players.length; i++) {
             if (this.playerID != players[i]) {
                 playerData = {
@@ -31,6 +32,22 @@ module.exports = class Player {
                 }
                 this.socket.emit(ServerEvents.ON_JOIN_GAME, playerData);
             }
+        }
+        this.room.CheckAndStart()
+        this.currentGame = this.room.game;
+
+        if (this.currentGame != null) {
+            console.log("game set" + this.currentGame.MULTIPLIER);
+        }
+    }
+    MovePad(data) {
+        console.log("sending input to game1" + this.currentGame.MULTIPLIER);
+        if (this.currentGame != null) {
+            var inputData = {
+                direction: data.direction
+            }
+            console.log("sending input to game2");
+            this.currentGame.MovePad(this.playerID, inputData);
         }
     }
 }
