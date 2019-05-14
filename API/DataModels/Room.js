@@ -39,7 +39,7 @@ module.exports = class Room {
     }
 
     CheckAndStart() {
-        if (Object.keys(this.playersInRoomDictionary).length == 2) {
+        if (Object.keys(this.playersInRoomDictionary).length == 1) {
             this.UpdateAllPlayerInRoom(ServerEvents.ON_GAME_STARTED, {});
             this.game.SetUpWorld();
             this.game.StartGame();
@@ -58,6 +58,7 @@ module.exports = class Room {
         player.socket.emit(ServerEvents.ON_LEAVE_ROOM, playerData);
         player.socket.to(this.roomName).emit(ServerEvents.ON_LEAVE_ROOM, playerData);
         player.JoinLobby(this.lobby);
+        player.socket.leave(this.roomName);
         delete this.playersInRoomDictionary[player.playerID];
     }
     IsEmpty() {

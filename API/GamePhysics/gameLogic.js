@@ -1,4 +1,5 @@
 var Planck = require("planck-js");
+var GameLoop=require("../GameLoopLogic/GameLoop");
 const GameLoop = require('node-gameloop');
 var Vec2 = Planck.Vec2;
 var ballBodyDef = {
@@ -12,8 +13,11 @@ var ballFixDef = {
 module.exports = class GameLogic {
     constructor(room) {
         //console.log(room);
+        this.dataToSend=[];
+        this.loop=new GameLoop(30);
         this.room = room;
         this.pads = {};
+        this.frame=5;
         this.previousPadPositions = {};
         this.worldLoop = null;
         this.world = new Planck.World(Vec2(0, 0));
@@ -54,8 +58,8 @@ module.exports = class GameLogic {
         this.previousPadPositions[playerID] = 0;
     }
     MovePad(playerID, inputData) {
-        console.log("player id "+playerID+" inputData "+JSON.stringify(inputData));
-        if (Object.keys(this.pads).length == 2) {
+        //console.log("player id "+playerID+" inputData "+JSON.stringify(inputData));
+        if (Object.keys(this.pads).length == 1) {
             this.pads[playerID].setLinearVelocity(Vec2(0, 15 * inputData.direction));
         }
     }
@@ -63,23 +67,38 @@ module.exports = class GameLogic {
         this.ball.setLinearVelocity(this.ballspeed);
         var world = this;
         this.worldLoop = GameLoop.setGameLoop(function (delta) {
-            world.world.step(1 / 30);
-            world.UpdatePlayers(world.GetBallPosition(), world.GetPadPositions());
-
-        }, 1000 / 30);
+            console.log(delta);
+            //world.world.step(1/20);
+            //world.UpdatePlayers(world.GetBallPosition(), world.GetPadPositions());
+            world.frame++;
+        }, 1000/20);
     }
     UpdatePlayers(ballPos, padsPos) {
+       
+
         var updateData = {
+            frame:this.frame.toString(),
             ball: ballPos,
             pads: padsPos
         }
-        this.room.UpdatePlayers(updateData);
+        this.dataToSend.push(updateData);
+        if(this.dataToSend.length>5){
+            this.dataToSend.splice(0,1);
+        }
+        this.room.UpdatePlayers({updateData:this.dataToSend});
     }
 
     GetPadPositions() {
         var keys = Object.keys(this.pads);
         var padPos = {};
-        if (this.previousPadPositions[keys[0]] != this.pads[keys[0]].getWorldPoint(Vec2(0, 0)).y || this.previousPadPositions[keys[1]] != this.pads[keys[1]].getWorldPoint(Vec2(0, 0)).y) {
+        var playerposChanged=false;
+        for(var j=0;j<keys.length;j++){
+            if(this.previousPadPositions[keys[j]] != this.pads[keys[j]].getWorldPoint(Vec2(0, 0)).y){
+                playerposChanged=true;
+                break;
+            }
+        }
+        if (playerposChanged) {
             for (var i = 0; i < keys.length; i++) {
                 var pos = {};
                 this.previousPadPositions[keys[i]]=this.pads[keys[i]].getWorldPoint(Vec2(0, 0)).y;
@@ -89,6 +108,7 @@ module.exports = class GameLogic {
                 padPos[keys[i]] = pos;
             }
         }
+        //console.log(padPos);
         return padPos;
     }
     GetBallPosition() {
@@ -99,13 +119,13 @@ module.exports = class GameLogic {
             xPos: pos.x,
             yPos: pos.y,
         }
+        //console.log(JSON.stringify(sendPos));
         return sendPos;
     }
     OnCollision(contact) {
         var fixtureATag = contact.m_fixtureA.m_userData;
         var fixtureBTag = contact.m_fixtureB.m_userData;
-        //console.log("qqqqqqqqqqqqqqqqqqqqqqqqqqqq");
-        // game.GetBallPosition();
+        
         if ((fixtureATag == "pad1" || fixtureBTag == "pad1" || fixtureATag == "pad2" || fixtureBTag == "pad2" || fixtureATag == "rightEdge" || fixtureBTag == "rightEdge" || fixtureATag == "leftEdge" || fixtureBTag == "leftEdge") && (fixtureATag == "ball" || fixtureBTag == "ball")) {
             this.ballspeed.x = -this.ballspeed.x;
             this.ball.setLinearVelocity(this.ballspeed);
@@ -113,7 +133,6 @@ module.exports = class GameLogic {
             this.ballspeed.y = -this.ballspeed.y;
             this.ball.setLinearVelocity(this.ballspeed);
         }
-        //console.log("collision "+fixtureATag+"  "+fixtureBTag);
         if ((fixtureATag == "ball" || fixtureBTag == "ball") && (fixtureATag == "leftEdge" || fixtureBTag == "leftEdge")) {
             //console.log("collision with left wall p1 lost ");
             //world.destroyBody(ball);

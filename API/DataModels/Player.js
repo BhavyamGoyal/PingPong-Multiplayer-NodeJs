@@ -35,18 +35,13 @@ module.exports = class Player {
         }
         this.room.CheckAndStart()
         this.currentGame = this.room.game;
-
-        if (this.currentGame != null) {
-            console.log("game set" + this.currentGame.MULTIPLIER);
-        }
     }
     MovePad(data) {
-        console.log("sending input to game1" + this.currentGame.MULTIPLIER);
         if (this.currentGame != null) {
             var inputData = {
-                direction: data.direction
+                direction: data.direction,
+                frame: data.frame
             }
-            console.log("sending input to game2");
             this.currentGame.MovePad(this.playerID, inputData);
         }
     }
