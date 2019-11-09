@@ -1,6 +1,5 @@
 var Planck = require("planck-js");
-var GameLoop=require("../GameLoopLogic/GameLoop");
-const GameLoop = require('node-gameloop');
+var GameLoop=require("gameupdate-loop");
 var Vec2 = Planck.Vec2;
 var ballBodyDef = {
     type: 'dynamic',
@@ -14,7 +13,7 @@ module.exports = class GameLogic {
     constructor(room) {
         //console.log(room);
         this.dataToSend=[];
-        this.loop=new GameLoop(30);
+        this.loop;
         this.room = room;
         this.pads = {};
         this.frame=5;
@@ -36,6 +35,7 @@ module.exports = class GameLogic {
             position: Vec2(3.8 * this.MULTIPLIER, 0)
         });
         this.ball = this.world.createBody(ballBodyDef);
+        console.log(this.ball);
         this.ballspeed = Vec2(5 * this.MULTIPLIER, 2.5 * this.MULTIPLIER);
         var gameWorld = this;
         this.world.on('begin-contact', function (contact) {
@@ -66,12 +66,13 @@ module.exports = class GameLogic {
     StartGame() {
         this.ball.setLinearVelocity(this.ballspeed);
         var world = this;
-        this.worldLoop = GameLoop.setGameLoop(function (delta) {
-            console.log(delta);
-            //world.world.step(1/20);
-            //world.UpdatePlayers(world.GetBallPosition(), world.GetPadPositions());
+        this.worldLoop = new GameLoop(60,function (delta, frameCount) {
+            console.log(frameCount);
+            world.world.step(delta);
+            world.UpdatePlayers(world.GetBallPosition(), world.GetPadPositions());
             world.frame++;
-        }, 1000/20);
+        });
+        this.worldLoop.StartGameLoop();
     }
     UpdatePlayers(ballPos, padsPos) {
        
